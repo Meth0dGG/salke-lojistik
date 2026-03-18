@@ -264,11 +264,27 @@
       </div>
       <div class="login-error" id="loginError">Kullanıcı adı veya şifre hatalı.</div>
       <button class="login-btn" id="loginBtn" onclick="doLogin()">GİRİŞ YAP →</button>
+      <button onclick="hashModalAc()" style="display:block;background:transparent;border:1px solid #1b3a5c;color:#64748b;padding:8px;font-size:12px;cursor:pointer;border-radius:4px;font-family:'DM Mono',monospace;margin-top:4px;width:100%">🔐 Şifre Hash Üret</button>
       <button id="loginSetupBtn" onclick="loginSetupMode()" style="display:none;background:transparent;border:1px solid var(--accent);color:var(--accent2);padding:11px;font-size:13px;cursor:pointer;border-radius:4px;font-family:'DM Sans',sans-serif;margin-top:4px;transition:all .15s">
         ⚙ İLK KURULUM — Drive Bağlantısı Yap
       </button>
     </div>
     <div class="login-version">v1.0 · Salke Lojistik ©2026</div>
+
+<!-- Hash Üretici Modal -->
+<div id="hashModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#0d1f2d;border:1px solid #1b72c9;border-radius:8px;padding:28px;width:360px;font-family:'DM Sans',sans-serif">
+    <div style="font-family:'DM Mono',monospace;font-size:13px;color:#60a5fa;margin-bottom:16px">🔐 ŞİFRE HASH ÜRETİCİ</div>
+    <input id="hashInput" type="text" placeholder="Şifreyi girin" style="width:100%;box-sizing:border-box;background:#05111f;border:1px solid #1b3a5c;color:#e2e8f0;padding:10px;border-radius:4px;font-size:14px;margin-bottom:12px">
+    <button onclick="hashUret()" style="width:100%;background:#1b72c9;color:#fff;border:none;padding:10px;border-radius:4px;cursor:pointer;font-size:14px;margin-bottom:12px">Hash Üret</button>
+    <div id="hashSonuc" style="display:none;background:#05111f;border:1px solid #1b3a5c;border-radius:4px;padding:10px;margin-bottom:12px">
+      <div style="font-size:11px;color:#64748b;margin-bottom:4px">SHEETS'E KOPYALAYIN:</div>
+      <div id="hashDeger" style="font-family:'DM Mono',monospace;font-size:11px;color:#4ade80;word-break:break-all"></div>
+      <button onclick="hashKopyala()" style="margin-top:8px;background:transparent;border:1px solid #1b3a5c;color:#60a5fa;padding:4px 12px;border-radius:3px;cursor:pointer;font-size:12px">📋 Kopyala</button>
+    </div>
+    <button onclick="document.getElementById('hashModal').style.display='none'" style="width:100%;background:transparent;border:1px solid #1b3a5c;color:#94a3b8;padding:8px;border-radius:4px;cursor:pointer;font-size:13px">Kapat</button>
+  </div>
+</div>
   </div>
 </div>
 
@@ -2004,6 +2020,37 @@ buildFormSelects();
 let currentUser = null; // {kullanici, rol, ad}
 
 // Şifre hash (SHA-256 benzeri basit — Sheets'te düz metin de saklanabilir)
+// Hash üretici fonksiyonlar
+async function hashUret() {
+  const pass = document.getElementById('hashInput').value;
+  if (!pass) return;
+  const hash = await hashPass(pass);
+  document.getElementById('hashDeger').textContent = hash;
+  document.getElementById('hashSonuc').style.display = 'block';
+}
+function hashKopyala() {
+  const hash = document.getElementById('hashDeger').textContent;
+  navigator.clipboard.writeText(hash).then(() => {
+    showToast('✓ Hash kopyalandı', '#22c55e');
+    document.getElementById('hashModal').style.display = 'none';
+  }).catch(() => {
+    // Fallback
+    const el = document.createElement('textarea');
+    el.value = hash;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast('✓ Hash kopyalandı', '#22c55e');
+    document.getElementById('hashModal').style.display = 'none';
+  });
+}
+function hashModalAc() {
+  document.getElementById('hashInput').value = '';
+  document.getElementById('hashSonuc').style.display = 'none';
+  document.getElementById('hashModal').style.display = 'flex';
+}
+
 async function hashPass(pass) {
   // crypto.subtle sadece HTTPS'te çalışır — her ortamda çalışan fallback
   if (window.crypto && window.crypto.subtle) {
