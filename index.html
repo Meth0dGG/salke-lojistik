@@ -940,20 +940,15 @@ function render() {
   const tA=filtered.reduce((s,r)=>s+(Number(r.alis)||0),0);
   const tS=filtered.reduce((s,r)=>s+(Number(r.satis)||0),0);
   const tK=tS-tA;
-  const avgO=filtered.length?(filtered.reduce((s,r)=>s+((Number(r.satis)||0)-(Number(r.alis)||0)),0)/filtered.reduce((s,r)=>s+(Number(r.alis)||0),1)*100).toFixed(1):0;
+  const avgO=tA>0?((tK/tA)*100).toFixed(1):0;
   const isFiltered = filtered.length !== records.length;
-  // Toplam kayıt her zaman tüm records
-  document.getElementById('statTotal').textContent = records.length;
-  if (isFiltered || !sheetsStats) {
-    document.getElementById('statAlis').textContent  = '₺'+fmt(tA);
-    document.getElementById('statSatis').textContent = '₺'+fmt(tS);
-    document.getElementById('statKar').textContent   = '₺'+fmt(tK);
-    document.getElementById('statOran').textContent  = '%'+avgO;
-    document.getElementById('statsSource').textContent = isFiltered ? 'FİLTRE (yerel)' : 'YERELden';
-  } else {
-    renderSheetsStats();
-    document.getElementById('statTotal').textContent = records.length; // override sheetsStats.total
-  }
+  // Her zaman filtrelenmiş veriden hesapla
+  document.getElementById('statTotal').textContent = isFiltered ? filtered.length + ' / ' + records.length : records.length;
+  document.getElementById('statAlis').textContent  = '₺'+fmt(tA);
+  document.getElementById('statSatis').textContent = '₺'+fmt(tS);
+  document.getElementById('statKar').textContent   = '₺'+fmt(tK);
+  document.getElementById('statOran').textContent  = '%'+avgO;
+  document.getElementById('statsSource').textContent = isFiltered ? 'FİLTRELENMİŞ' : (sheetsStats ? 'SHEETS' : 'YERELden');
   document.getElementById('rowCount').innerHTML=`<strong>${filtered.length}</strong> kayıt gösteriliyor (toplam ${records.length})`;
   const totalPages=Math.ceil(filtered.length/PAGE_SIZE);
   const pb=document.getElementById('pageBtns'); pb.innerHTML='';
